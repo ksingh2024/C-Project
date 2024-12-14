@@ -1,0 +1,646 @@
+// --------------------------------------------------------------------------------
+// Name: Kultegh Singh
+// Class: C-Programming 1(151-001)
+// Abstract: Final Project
+// --------------------------------------------------------------------------------
+
+#define _CRT_SECURE_NO_WARNINGS
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+const int intARRAY_SIZE = 100; 
+
+// --------------------------------------------------------------------------------
+// Structs
+// --------------------------------------------------------------------------------
+
+typedef struct 
+{
+    char strDate[20];
+    char strState[10];
+    char strCounty[20];
+    char strRace[20];
+    int intHouseholdSize;
+    float sngIncome;
+} udtHousehold;
+
+// --------------------------------------------------------------------------------
+// Prototypes
+// --------------------------------------------------------------------------------
+
+void writeMode();
+void displayMode();
+void addHousehold(FILE* file);
+void loadData(udtHousehold audtHouseholds[], int* pintCount);
+void displayMenu();
+void totalHouseholds(udtHousehold audtHouseholds[], int pintCount);
+void totalByCounty(udtHousehold audtHouseholds[], int pintCount);
+void totalByRace(udtHousehold audtHouseholds[], int pintCount);
+void avgIncomeOverall(udtHousehold audtHouseholds[], int pintCount);
+void avgIncomeByCounty(udtHousehold audtHouseholds[], int pintCount);
+void avgIncomeByRace(udtHousehold audtHouseholds[], int pintCount);
+void percentBelowPoverty(udtHousehold audtHouseholds[], int pintCount);
+void percentBelowPovertyByCounty(udtHousehold audtHouseholds[], int pintCount);
+void percentBelowPovertyByRace(udtHousehold audtHouseholds[], int pintCount);
+int isBelowPoverty(int intSize, float sngIncome);
+
+// --------------------------------------------------------------------------------
+// Name: Main
+// Abstract: Entry point for the program.
+// --------------------------------------------------------------------------------
+
+int main() 
+{
+    int intChoice;
+
+    printf("Census Survey Application\n");
+    printf("1. Write Mode\n");
+    printf("2. Display Mode\n");
+    printf("Enter your choice: ");
+    scanf("%d", &intChoice);
+
+    if (intChoice == 1) 
+    {
+        writeMode();
+    }
+    else if (intChoice == 2)
+    {
+        displayMode();
+    }
+    else
+    {
+        printf("Invalid choice. Exiting...\n");
+    }
+
+    return 0;
+}
+
+// --------------------------------------------------------------------------------
+// Name: writeMode
+// Abstract: Handles the data entry process for the Census Survey Application.
+// --------------------------------------------------------------------------------
+
+void writeMode() 
+{
+    FILE* file = fopen("census_data.csv", "a");
+    if (!file) 
+    {
+        printf("Error opening file for writing.\n");
+        return;
+    }
+
+    char strAnotherHousehold = 'Y';
+    while (strAnotherHousehold == 'Y' || strAnotherHousehold == 'y')
+    {
+        addHousehold(file);
+        printf("Do you want to add another Household? (Y/N): ");
+        scanf(" %c", &strAnotherHousehold);
+    }
+
+    fclose(file);
+}
+
+// --------------------------------------------------------------------------------
+// Name: addHousehold
+// Abstract: Adds a new Household entry to the census data file.
+// --------------------------------------------------------------------------------
+
+void addHousehold(FILE* file)
+{
+    char strDate[20], strState[10], strCounty[20], strRace[20];
+    int intHouseholdSize;
+    float sngIncome;
+
+    printf("Enter survey date (YYYY-MM-DD): ");
+    scanf("%s", strDate);
+
+    // State Selection
+    printf("Select state:\n1. Ohio\n2. Kentucky\n");
+    int intStateChoice;
+    scanf("%d", &intStateChoice);
+
+    if (intStateChoice == 1) 
+    {
+        strcpy(strState, "Ohio");
+        printf("Select county:\n1. Hamilton\n2. Butler\n");
+        int intCountyChoice;
+        scanf("%d", &intCountyChoice);
+
+        if (intCountyChoice == 1) 
+        {
+            strcpy(strCounty, "Hamilton");
+        }
+        else if (intCountyChoice == 2)
+        {
+            strcpy(strCounty, "Butler");
+        }
+        else 
+        {
+            printf("Invalid county choice. Entry skipped.\n");
+            return;
+        }
+
+    }
+    else if (intStateChoice == 2) 
+    {
+        strcpy(strState, "Kentucky");
+        printf("Select county:\n1. Boone\n2. Kenton\n");
+        int intCountyChoice;
+        scanf("%d", &intCountyChoice);
+
+        if (intCountyChoice == 1)
+        {
+            strcpy(strCounty, "Boone");
+        }
+        else if (intCountyChoice == 2)
+        {
+            strcpy(strCounty, "Kenton");
+        }
+        else 
+        {
+            printf("Invalid county choice. Entry skipped.\n");
+            return;
+        }
+
+    }
+    else 
+    {
+        printf("Invalid state choice. Entry skipped.\n");
+        return;
+    }
+
+    // Race Selection
+    printf("Select race:\n1. Caucasian\n2. African American\n3. Hispanic\n4. Asian\n5. Other\n");
+    int intRaceChoice;
+    scanf("%d", &intRaceChoice);
+
+    if (intRaceChoice == 1) 
+    {
+        strcpy(strRace, "Caucasian");
+    }
+    else if (intRaceChoice == 2) 
+    {
+        strcpy(strRace, "African American");
+    }
+    else if (intRaceChoice == 3)
+    {
+        strcpy(strRace, "Hispanic");
+    }
+    else if (intRaceChoice == 4)
+    {
+        strcpy(strRace, "Asian");
+    }
+    else if (intRaceChoice == 5) 
+    {
+        strcpy(strRace, "Other");
+    }
+    else 
+    {
+        printf("Invalid race choice. Entry skipped.\n");
+        return;
+    }
+
+    // Household Size Validation
+    printf("Enter household size: ");
+    scanf("%d", &intHouseholdSize);
+
+    if (intHouseholdSize <= 0) 
+    {
+        printf("Invalid household size. Entry skipped.\n");
+        return;
+    }
+
+    // Income Validation
+    printf("Enter household yearly income: ");
+    scanf("%f", &sngIncome);
+
+    if (sngIncome <= 0) 
+    {
+        printf("Invalid income. Entry skipped.\n");
+        return;
+    }
+
+    // Write to file
+    fprintf(file, "%s,%s,%s,%s,%d,%.2f\n", strDate, strState, strCounty, strRace, intHouseholdSize, sngIncome);
+    printf("Household entry added successfully.\n");
+}
+
+
+// --------------------------------------------------------------------------------
+// Name: displayMode
+// Abstract: Provides the user with options to display and analyze the census data.
+// --------------------------------------------------------------------------------
+
+void displayMode() 
+{
+    udtHousehold audtHouseholds[intARRAY_SIZE];
+    int pintCount = 0;
+    loadData(audtHouseholds, &pintCount);
+
+    if (pintCount == 0) 
+    {
+        printf("No data available.\n");
+        return;
+    }
+
+    char strChoice;
+    do 
+    {
+        displayMenu();
+        scanf(" %c", &strChoice);
+
+        switch (strChoice)
+        {
+        case 'A': totalHouseholds(audtHouseholds, pintCount); 
+            break;
+        case 'B': totalByCounty(audtHouseholds, pintCount); 
+            break;
+        case 'C': totalByRace(audtHouseholds, pintCount); 
+            break;
+        case 'D': avgIncomeOverall(audtHouseholds, pintCount);
+            break;
+        case 'E': avgIncomeByCounty(audtHouseholds, pintCount);
+            break;
+        case 'F': avgIncomeByRace(audtHouseholds, pintCount); 
+            break;
+        case 'G': percentBelowPoverty(audtHouseholds, pintCount);
+            break;
+        case 'H': percentBelowPovertyByCounty(audtHouseholds, pintCount); 
+            break;
+        case 'I': percentBelowPovertyByRace(audtHouseholds, pintCount);
+            break;
+        case 'Q': printf("Exiting Display Mode...\n");
+            break;
+        default: printf("Invalid choice. Try again.\n");
+        }
+    } while (strChoice != 'Q');
+}
+
+// --------------------------------------------------------------------------------
+// Name: loadData
+// Abstract: Reads data from the CSV file into a structure array for processing.
+// --------------------------------------------------------------------------------
+
+void loadData(udtHousehold audtHouseholds[], int* pintCount) 
+{
+    FILE* file = fopen("census_data.csv", "r");
+    if (!file)
+    {
+        printf("Error opening file for reading.\n");
+        return;
+    }
+
+    while (fscanf(file, "%[^,],%[^,],%[^,],%[^,],%d,%f\n",
+        (audtHouseholds + *pintCount)->strDate,
+        (audtHouseholds + *pintCount)->strState,
+        (audtHouseholds + *pintCount)->strCounty,
+        (audtHouseholds + *pintCount)->strRace,
+        &(audtHouseholds + *pintCount)->intHouseholdSize,
+        &(audtHouseholds + *pintCount)->sngIncome) != EOF)
+    {
+        (*pintCount)++;
+    }
+
+    fclose(file);
+}
+
+// --------------------------------------------------------------------------------
+// Name: displayMenu
+// Abstract: Displays the available options for analyzing census data.
+// --------------------------------------------------------------------------------
+
+void displayMenu() 
+{
+    printf("\nDisplay Menu:\n");
+    printf("A. Total Household Surveyed\n");
+    printf("B. Total Household Surveyed per County\n");
+    printf("C. Total Household Surveyed per Race\n");
+    printf("D. Average Household Income\n");
+    printf("E. Average Household Income by County\n");
+    printf("F. Average Household Income by Race\n");
+    printf("G. Percentage Below Poverty\n");
+    printf("H. Percentage Below Poverty by County\n");
+    printf("I. Percentage Below Poverty by Race\n");
+    printf("Q. Quit\n");
+    printf("Enter your choice: ");
+}
+
+// --------------------------------------------------------------------------------
+// Name: totalHouseholds
+// Abstract: Displays the total number of Households surveyed.
+// --------------------------------------------------------------------------------
+
+void totalHouseholds(udtHousehold audtHouseholds[], int pintCount) 
+{
+    printf("Total Households Surveyed: %d\n", pintCount);
+}
+
+// --------------------------------------------------------------------------------
+// Name: totalByCounty
+// Abstract: Displays the total number of Households surveyed by County.
+// --------------------------------------------------------------------------------
+
+void totalByCounty(udtHousehold audtHouseholds[], int pintCount)
+{
+    int intHamilton = 0, intButler = 0, intBoone = 0, intKenton = 0;
+
+    for (int intIndex = 0; intIndex < pintCount; intIndex++) 
+    {
+        if (strcmp(audtHouseholds[intIndex].strCounty, "Hamilton") == 0) 
+            intHamilton++;
+        else if (strcmp(audtHouseholds[intIndex].strCounty, "Butler") == 0)
+            intButler++;
+        else if (strcmp(audtHouseholds[intIndex].strCounty, "Boone") == 0) 
+            intBoone++;
+        else if (strcmp(audtHouseholds[intIndex].strCounty, "Kenton") == 0)
+            intKenton++;
+    }
+
+    printf("Households per County:\n");
+    printf("Hamilton: %d\n", intHamilton);
+    printf("Butler: %d\n", intButler);
+    printf("Boone: %d\n", intBoone);
+    printf("Kenton: %d\n", intKenton);
+}
+
+// --------------------------------------------------------------------------------
+// Name: totalByRace
+// Abstract: Displays the total number of Households surveyed by Race.
+// --------------------------------------------------------------------------------
+
+void totalByRace(udtHousehold audtHouseholds[], int pintCount) 
+{
+    int intCaucasian = 0, intAfricanAmerican = 0, intHispanic = 0, intAsian = 0, intOther = 0;
+
+    for (int intIndex = 0; intIndex < pintCount; intIndex++) 
+    {
+        if (strcmp(audtHouseholds[intIndex].strRace, "Caucasian") == 0) 
+            intCaucasian++;
+        else if (strcmp(audtHouseholds[intIndex].strRace, "African American") == 0) 
+            intAfricanAmerican++;
+        else if (strcmp(audtHouseholds[intIndex].strRace, "Hispanic") == 0)
+            intHispanic++;
+        else if (strcmp(audtHouseholds[intIndex].strRace, "Asian") == 0) 
+            intAsian++;
+        else if (strcmp(audtHouseholds[intIndex].strRace, "Other") == 0) 
+            intOther++;
+    }
+
+    printf("Households per Race:\n");
+    printf("Caucasian: %d\n", intCaucasian);
+    printf("African American: %d\n", intAfricanAmerican);
+    printf("Hispanic: %d\n", intHispanic);
+
+    printf("Asian: %d\n", intAsian);
+    printf("Other: %d\n", intOther);
+}
+
+// --------------------------------------------------------------------------------
+// Name: avgIncomeOverall
+// Abstract: Displays the overall average Household Income.
+// --------------------------------------------------------------------------------
+
+void avgIncomeOverall(udtHousehold audtHouseholds[], int pintCount)
+{
+    float sngTotalIncome = 0.0;
+
+    for (int intIndex = 0; intIndex < pintCount; intIndex++) 
+    {
+        sngTotalIncome += audtHouseholds[intIndex].sngIncome;
+    }
+
+    printf("Overall Average Household Income: $%.2f\n", sngTotalIncome / pintCount);
+}
+
+// --------------------------------------------------------------------------------
+// Name: avgIncomeByCounty
+// Abstract: Displays the average Household sngIncome by County.
+// --------------------------------------------------------------------------------
+
+void avgIncomeByCounty(udtHousehold audtHouseholds[], int pintCount)
+{
+    float sngHamiltonIncome = 0, sngButlerIncome = 0, sngBooneIncome = 0, sngKentonIncome = 0;
+    int intHamiltonCount = 0, intButlerCount = 0, intBooneCount = 0, intKentonCount = 0;
+
+    for (int intIndex = 0; intIndex < pintCount; intIndex++) 
+    {
+        if (strcmp(audtHouseholds[intIndex].strCounty, "Hamilton") == 0) {
+            sngHamiltonIncome += audtHouseholds[intIndex].sngIncome;
+            intHamiltonCount++;
+        }
+        else if (strcmp(audtHouseholds[intIndex].strCounty, "Butler") == 0) {
+            sngButlerIncome += audtHouseholds[intIndex].sngIncome;
+            intButlerCount++;
+        }
+        else if (strcmp(audtHouseholds[intIndex].strCounty, "Boone") == 0) {
+            sngBooneIncome += audtHouseholds[intIndex].sngIncome;
+            intBooneCount++;
+        }
+        else if (strcmp(audtHouseholds[intIndex].strCounty, "Kenton") == 0) {
+            sngKentonIncome += audtHouseholds[intIndex].sngIncome;
+            intKentonCount++;
+        }
+    }
+
+    printf("Average Income by County:\n");
+    if (intHamiltonCount > 0)
+        printf("Hamilton: $%.2f\n", sngHamiltonIncome / intHamiltonCount);
+    if (intButlerCount > 0) 
+        printf("Butler: $%.2f\n", sngButlerIncome / intButlerCount);
+    if (intBooneCount > 0)
+        printf("Boone: $%.2f\n", sngBooneIncome / intBooneCount);
+    if (intKentonCount > 0) 
+        printf("Kenton: $%.2f\n", sngKentonIncome / intKentonCount);
+}
+
+// --------------------------------------------------------------------------------
+// Name: avgIncomeByRace
+// Abstract: Displays the average Household sngIncome by Race.
+// --------------------------------------------------------------------------------
+
+void avgIncomeByRace(udtHousehold audtHouseholds[], int pintCount)
+{
+    float sngCaucasianIncome = 0, sngAfricanIncome = 0, sngHispanicIncome = 0, sngAsianIncome = 0, sngOtherIncome = 0;
+    int intCaucasianCount = 0, intAfricanCount = 0, intHispanicCount = 0, intAsianCount = 0, intOtherCount = 0;
+
+    for (int intIndex = 0; intIndex < pintCount; intIndex++) 
+    {
+        if (strcmp(audtHouseholds[intIndex].strRace, "Caucasian") == 0) 
+        {
+            sngCaucasianIncome += audtHouseholds[intIndex].sngIncome;
+            intCaucasianCount++;
+        }
+        else if (strcmp(audtHouseholds[intIndex].strRace, "African American") == 0) 
+        {
+            sngAfricanIncome += audtHouseholds[intIndex].sngIncome;
+            intAfricanCount++;
+        }
+        else if (strcmp(audtHouseholds[intIndex].strRace, "Hispanic") == 0) 
+        {
+            sngHispanicIncome += audtHouseholds[intIndex].sngIncome;
+            intHispanicCount++;
+        }
+        else if (strcmp(audtHouseholds[intIndex].strRace, "Asian") == 0) 
+        {
+            sngAsianIncome += audtHouseholds[intIndex].sngIncome;
+            intAsianCount++;
+        }
+        else if (strcmp(audtHouseholds[intIndex].strRace, "Other") == 0) 
+        {
+            sngOtherIncome += audtHouseholds[intIndex].sngIncome;
+            intOtherCount++;
+        }
+    }
+
+    printf("Average Income by Race:\n");
+    if (intCaucasianCount > 0)
+        printf("Caucasian: $%.2f\n", sngCaucasianIncome / intCaucasianCount);
+    if (intAfricanCount > 0) 
+        printf("African American: $%.2f\n", sngAfricanIncome / intAfricanCount);
+    if (intHispanicCount > 0)
+        printf("Hispanic: $%.2f\n", sngHispanicIncome / intHispanicCount);
+    if (intAsianCount > 0) 
+        printf("Asian: $%.2f\n", sngAsianIncome / intAsianCount);
+    if (intOtherCount > 0)
+        printf("Other: $%.2f\n", sngOtherIncome / intOtherCount);
+}
+
+// --------------------------------------------------------------------------------
+// Name: isBelowPoverty
+// Abstract: Determines if a udtHousehold is below the poverty threshold.
+// --------------------------------------------------------------------------------
+
+int isBelowPoverty(int intSize, float sngIncome) 
+{
+    if (intSize == 1 && sngIncome < 12000)
+        return 1;
+    if (intSize == 2 && sngIncome < 18000)
+        return 1;
+    if (intSize == 3 && sngIncome < 25000)
+        return 1;
+    if (intSize == 4 && sngIncome < 30000)
+        return 1;
+    if (intSize >= 5 && sngIncome < 40000)
+        return 1;
+    return 0;
+}
+
+// --------------------------------------------------------------------------------
+// Name: percentBelowPoverty
+// Abstract: Displays the overall percentage of Households below the poverty threshold.
+// --------------------------------------------------------------------------------
+
+void percentBelowPoverty(udtHousehold audtHouseholds[], int pintCount) 
+{
+    int intBelowPoverty = 0;
+
+    for (int intIndex = 0; intIndex < pintCount; intIndex++) 
+    {
+        if (isBelowPoverty(audtHouseholds[intIndex].intHouseholdSize, audtHouseholds[intIndex].sngIncome)) 
+        {
+            intBelowPoverty++;
+        }
+    }
+
+    printf("Overall Percentage Below Poverty: %.2f%%\n", (intBelowPoverty / (float)pintCount) * 100);
+}
+
+// --------------------------------------------------------------------------------
+// Name: percentBelowPovertyByCounty
+// Abstract: Displays the percentage of Households below poverty by County.
+// --------------------------------------------------------------------------------
+
+void percentBelowPovertyByCounty(udtHousehold audtHouseholds[], int pintCount) 
+{
+    int intHamiltonPoverty = 0, intButlerPoverty = 0, intBoonePoverty = 0, intKentonPoverty = 0;
+    int intHamiltonCount = 0, intButlerCount = 0, intBooneCount = 0, intKentonCount = 0;
+
+    for (int intIndex = 0; intIndex < pintCount; intIndex++)
+    {
+        if (strcmp(audtHouseholds[intIndex].strCounty, "Hamilton") == 0) 
+        {
+            intHamiltonCount++;
+            if (isBelowPoverty(audtHouseholds[intIndex].intHouseholdSize, audtHouseholds[intIndex].sngIncome)) intHamiltonPoverty++;
+        }
+        else if (strcmp(audtHouseholds[intIndex].strCounty, "Butler") == 0) 
+        {
+            intButlerCount++;
+            if (isBelowPoverty(audtHouseholds[intIndex].intHouseholdSize, audtHouseholds[intIndex].sngIncome)) intButlerPoverty++;
+        }
+        else if (strcmp(audtHouseholds[intIndex].strCounty, "Boone") == 0) 
+        {
+            intBooneCount++;
+            if (isBelowPoverty(audtHouseholds[intIndex].intHouseholdSize, audtHouseholds[intIndex].sngIncome)) intBoonePoverty++;
+        }
+        else if (strcmp(audtHouseholds[intIndex].strCounty, "Kenton") == 0) 
+        {
+            intKentonCount++;
+            if (isBelowPoverty(audtHouseholds[intIndex].intHouseholdSize, audtHouseholds[intIndex].sngIncome)) intKentonPoverty++;
+        }
+    }
+
+    printf("Percentage Below Poverty by County:\n");
+    if (intHamiltonCount > 0) 
+        printf("Hamilton: %.2f%%\n", (intHamiltonPoverty / (float)intHamiltonCount) * 100);
+    if (intButlerCount > 0)
+        printf("Butler: %.2f%%\n", (intButlerPoverty / (float)intButlerCount) * 100);
+    if (intBooneCount > 0) 
+        printf("Boone: %.2f%%\n", (intBoonePoverty / (float)intBooneCount) * 100);
+    if (intKentonCount > 0)
+        printf("Kenton: %.2f%%\n", (intKentonPoverty / (float)intKentonCount) * 100);
+}
+
+// --------------------------------------------------------------------------------
+// Name: percentBelowPovertyByRace
+// Abstract: Displays the percentage of Households below poverty by Race.
+// --------------------------------------------------------------------------------
+
+void percentBelowPovertyByRace(udtHousehold audtHouseholds[], int pintCount) 
+{
+    int intCaucasianPoverty = 0, intAfricanPoverty = 0, intHispanicPoverty = 0, asianPoverty = 0, intOtherPoverty = 0;
+    int caucasianCount = 0, africanCount = 0, intHispanicCount = 0, intAsianCount = 0, intOtherCount = 0;
+
+    for (int intIndex = 0; intIndex < pintCount; intIndex++) 
+    {
+        if (strcmp(audtHouseholds[intIndex].strRace, "Caucasian") == 0) 
+        {
+            caucasianCount++;
+            if (isBelowPoverty(audtHouseholds[intIndex].intHouseholdSize, audtHouseholds[intIndex].sngIncome)) intCaucasianPoverty++;
+        }
+        else if (strcmp(audtHouseholds[intIndex].strRace, "African American") == 0) 
+        {
+            africanCount++;
+            if (isBelowPoverty(audtHouseholds[intIndex].intHouseholdSize, audtHouseholds[intIndex].sngIncome)) intAfricanPoverty++;
+        }
+        else if (strcmp(audtHouseholds[intIndex].strRace, "Hispanic") == 0) 
+        {
+            intHispanicCount++;
+            if (isBelowPoverty(audtHouseholds[intIndex].intHouseholdSize, audtHouseholds[intIndex].sngIncome)) intHispanicPoverty++;
+        }
+        else if (strcmp(audtHouseholds[intIndex].strRace, "Asian") == 0)
+        {
+            intAsianCount++;
+            if (isBelowPoverty(audtHouseholds[intIndex].intHouseholdSize, audtHouseholds[intIndex].sngIncome)) asianPoverty++;
+        }
+        else if (strcmp(audtHouseholds[intIndex].strRace, "Other") == 0) 
+        {
+            intOtherCount++;
+            if (isBelowPoverty(audtHouseholds[intIndex].intHouseholdSize, audtHouseholds[intIndex].sngIncome)) intOtherPoverty++;
+        }
+    }
+
+    printf("Percentage Below Poverty by Race:\n");
+    if (caucasianCount > 0)
+        printf("Caucasian: %.2f%%\n", (intCaucasianPoverty / (float)caucasianCount) * 100);
+    if (africanCount > 0)
+        printf("African American: %.2f%%\n", (intAfricanPoverty / (float)africanCount) * 100);
+    if (intHispanicCount > 0)
+        printf("Hispanic: %.2f%%\n", (intHispanicPoverty / (float)intHispanicCount) * 100);
+    if (intAsianCount > 0) 
+        printf("Asian: %.2f%%\n", (asianPoverty / (float)intAsianCount) * 100);
+    if (intOtherCount > 0) 
+        printf("Other: %.2f%%\n", (intOtherPoverty / (float)intOtherCount) * 100);
+}
